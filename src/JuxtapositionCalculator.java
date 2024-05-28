@@ -184,13 +184,13 @@ public class JuxtapositionCalculator {
 }
 
 
-/*class Cloco {
-    public static void main(String[] args) throws CodeExceptions.JuxtapositionArithmeticException {
-        String expression = "5 += 1";
+class Cloco {
+    public static void main(String[] args) throws CODEExceptions.JuxtapositionArithmeticException {
+        String expression = "((23==23)+(42>=42))";
 
         JuxtapositionCalculator calculator = new JuxtapositionCalculator();
         double result = calculator.calculate(expression);
 
         System.out.println("Result of the expression: " + result);
     }
-}*/
+}

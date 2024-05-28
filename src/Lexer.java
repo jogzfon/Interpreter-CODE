@@ -100,6 +100,7 @@ public class Lexer {
 
         //This will connect DISPLAY & SCAN with their :
         //Connects [ escape ]
+        //Connects expressions
         LineConnector lineConnector = new LineConnector();
         tokenList = lineConnector.ConnectLines(tokenList);
         return tokenList;

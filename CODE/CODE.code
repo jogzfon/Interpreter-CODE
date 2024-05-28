@@ -1,4 +1,5 @@
 BEGIN CODE
-INT dy =4, x=  23
-DISPLAY: dy + x
+FLOAT dy =4, x= 23
+SCAN: x
+DISPLAY: x & [&]
 END CODE

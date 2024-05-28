@@ -94,85 +94,13 @@ public class LineConnector {
         return retoken;
     }
 
-    //Connects all the values from variables to values datatype
-    //Called whenever a calculation of the value is required
-    public List<Token> ArithmeticLineConnector(Parser parser, List<Token> tokens) throws Exception {
-
-        List<Token> retoken = new ArrayList<>();
-
-        StringBuilder expressionBuilder = new StringBuilder();
-
-        for (int i = 0; i < tokens.size(); i++) {
-            if(tokens.get(i).getType() == Token.TokenType.VARIABLE && (i+1)<tokens.size()
-                    && (i-1)>=0 && (tokens.get(i+1).getType() == Token.TokenType.VALUE||(tokens.get(i-1).getType() == Token.TokenType.VALUE))){
-                VariableDeclarationNode varNode = parser.FindDeclaredNode(tokens.get(i).getValue());
-
-                if(varNode!=null){
-                    if(varNode.getValue()!="?"){
-                        expressionBuilder.append(tokens.get(i).getValue());
-                    }
-                    else{
-                        retoken.add(new Token(Token.TokenType.VALUE, expressionBuilder.toString()));
-                        expressionBuilder.setLength(0); // Reset the StringBuilder
-                        retoken.add(tokens.get(i));
-                    }
-                }else{
-                    if (expressionBuilder.length() > 0) {
-                        retoken.add(new Token(Token.TokenType.VALUE, expressionBuilder.toString()));
-                        expressionBuilder.setLength(0); // Reset the StringBuilder
-                    }
-                    // Add the token directly to retoken
-                    retoken.add(tokens.get(i));
-                }
-            }else if((tokens.get(i).getType() == Token.TokenType.EQUALS
-                    || tokens.get(i).getValue().equals("<")
-                    || tokens.get(i).getValue().equals(">")
-                    || tokens.get(i).getValue().equals("!")
-                    || tokens.get(i).getValue().equals("+")
-                    || tokens.get(i).getValue().equals("*")
-                    || tokens.get(i).getValue().equals("-")
-                    || tokens.get(i).getValue().equals("/")
-                    || tokens.get(i).getValue().equals("%"))
-                    && (i+1)<tokens.size() && tokens.get(i+1).getType() == Token.TokenType.EQUALS ) {
-                retoken.add(new Token(Token.TokenType.VALUE, tokens.get(i).getValue() + tokens.get(i+1).getValue()));
-                i++;
-            } else if((i+1)<tokens.size() && (tokens.get(i).getValue().equals("+") && tokens.get(i+1).getValue().equals("+"))
-                    || (tokens.get(i).getValue().equals("-") && tokens.get(i+1).getValue().equals("-"))) {
-                retoken.add(new Token(Token.TokenType.VALUE, tokens.get(i).getValue() + tokens.get(i+1).getValue()));
-                i++;
-            }else if(tokens.get(i).getValue().equals("IF")&&tokens.get(i).getValue().equals("WHILE")){
-                while (tokens.get(i).getType()==Token.TokenType.VARIABLE || tokens.get(i).getType()==Token.TokenType.VALUE){
-                    expressionBuilder.append(tokens.get(i).getValue() + " ");
-                    i++;
-                }
-                retoken.add(new Token(Token.TokenType.VALUE, expressionBuilder.toString()));
-                expressionBuilder.setLength(0); // Reset the StringBuilder
-                retoken.add(tokens.get(i));
-            }else if(tokens.get(i).getValue().equals("(")){
-                String val = tokens.get(i).getValue();
-                while ( val.charAt(val.length()-1) != ')' && tokens.get(i).getType()!=Token.TokenType.END_LINE){
-                    expressionBuilder.append(tokens.get(i).getValue() + " ");
-                    i++;
-                }
-                retoken.add(new Token(Token.TokenType.VALUE, expressionBuilder.toString()));
-                expressionBuilder.setLength(0); // Reset the StringBuilder
-                retoken.add(tokens.get(i));
-            }else{
-                if (expressionBuilder.length() > 0) {
-                    retoken.add(new Token(Token.TokenType.VALUE, expressionBuilder.toString()));
-                    expressionBuilder.setLength(0); // Reset the StringBuilder
-                }
-                // Add the token directly to retoken
-                retoken.add(tokens.get(i));
-            }
-        }
-        return retoken;
-    }
-
     //Checks if it is a number
     public boolean isNumeric(String str) {
         Pattern pattern = Pattern.compile("-?\\d+(\\.\\d+)?");
         Matcher matcher = pattern.matcher(str);
         return matcher.matches();
     }
+
+    //Connects all the values from variables to values datatype
+    //Called whenever a calculation of the value is required
 }

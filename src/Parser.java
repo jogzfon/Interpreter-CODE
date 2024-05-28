@@ -40,8 +40,11 @@ public class Parser {
 
     public void ParseTokens() throws Exception {
         while (tokens.get(currentTokenIndex).getType() != Token.TokenType.END_CODE) {
-            tokens = lineConnector.ArithmeticLineConnector(this, tokens);
+            arithConnector();
             ParseStatement();
+        }
+        for(Token token: tokens){
+            System.out.println(token);
         }
         if(outputNull==true){
             System.out.println("No Error Found");
@@ -135,6 +138,9 @@ public class Parser {
                     }
                 }
             case END_LINE:
+                currentTokenIndex++;
+                break;
+            case ESCAPE:
                 currentTokenIndex++;
                 break;
             default:
@@ -239,7 +245,7 @@ public class Parser {
     }
 
     //This function assigns value to the variable
-    private void ParseAssignmentStatement() throws CODEExceptions.NotExistingVariableName, CODEExceptions.VariableAfterCommaException, CODEExceptions.InvalidValueAddedException, CODEExceptions.WrongVariableFormat {
+    private void ParseAssignmentStatement() throws Exception {
         List<String> variables = new ArrayList<>();
         while (tokens.get(currentTokenIndex).getType() != Token.TokenType.END_LINE && currentTokenIndex < tokens.size()-1){
             if(tokens.get(currentTokenIndex).getType() == Token.TokenType.VARIABLE){
@@ -325,13 +331,13 @@ public class Parser {
                 value = "\'"+value+"\'";
             }
             if(dataType.equals("FLOAT")){
-                Validator.isValidBoolValue(value);
+                Validator.isValidFLOATValue(value);
 
                 if(!value.contains(".")){
-                    value += "0.0";
+                    value = Double.toString(Double.parseDouble(value)+0.0);
                 }
             }
-            value = CalculateIntOrFloat(value, varNode);
+            value = Calculate(value, varNode);
 
             FormatValidator(dataType, value);
             UpdateVariableValue(variableName,value);
@@ -525,12 +531,16 @@ public class Parser {
     //endregion
 
     //region SubMainFunction
-    public List<String> DistributeValues(List<String> variables, String value) throws CODEExceptions.WrongVariableFormat {
+    public List<String> DistributeValues(List<String> variables, String value) throws Exception {
         for (String variable: variables){
             for (VariableDeclarationNode variableNode: declarationNodes){
                 if(variableNode.getVariableName().equals(variable)){
                     VariableDeclarationNode vnode = FindDeclaredNode(variable);
+                    if (vnode.getDataType().equals("INT") || vnode.getDataType().equals("FLOAT") || vnode.getDataType().equals("BOOL")){
+                        value = Calculate(value, vnode);
+                    }
                     FormatValidator(vnode.getDataType(), value);
+
                     vnode.setValue(value);
                 }
             }
@@ -599,6 +609,82 @@ public class Parser {
     }
 
     //endregion
+
+    //region ValuesConnector
+    private void arithConnector() throws Exception {
+        List<Token> retoken = new ArrayList<>();
+
+        StringBuilder expressionBuilder = new StringBuilder();
+
+        for (int i = 0; i < tokens.size(); i++) {
+            if(tokens.get(i).getType() == Token.TokenType.VARIABLE && (i+1)<tokens.size()
+                    && (i-1)>=0 && (tokens.get(i+1).getType() == Token.TokenType.VALUE||(tokens.get(i-1).getType() == Token.TokenType.VALUE))){
+                VariableDeclarationNode varNode = FindDeclaredNode(tokens.get(i).getValue());
+
+                if(varNode!=null){
+                    if(varNode.getValue()!="?"){
+                        expressionBuilder.append(tokens.get(i).getValue());
+                    }
+                    else{
+                        retoken.add(new Token(Token.TokenType.VALUE, expressionBuilder.toString()));
+                        expressionBuilder.setLength(0); // Reset the StringBuilder
+                        retoken.add(tokens.get(i));
+                    }
+                }else{
+                    if (expressionBuilder.length() > 0) {
+                        retoken.add(new Token(Token.TokenType.VALUE, expressionBuilder.toString()));
+                        expressionBuilder.setLength(0); // Reset the StringBuilder
+                    }
+                    // Add the token directly to retoken
+                    retoken.add(tokens.get(i));
+                }
+            }else if((tokens.get(i).getType() == Token.TokenType.EQUALS
+                    || tokens.get(i).getValue().equals("<")
+                    || tokens.get(i).getValue().equals(">")
+                    || tokens.get(i).getValue().equals("!")
+                    || tokens.get(i).getValue().equals("+")
+                    || tokens.get(i).getValue().equals("*")
+                    || tokens.get(i).getValue().equals("-")
+                    || tokens.get(i).getValue().equals("/")
+                    || tokens.get(i).getValue().equals("%"))
+                    && (i+1)<tokens.size() && tokens.get(i+1).getType() == Token.TokenType.EQUALS ) {
+                retoken.add(new Token(Token.TokenType.VALUE, tokens.get(i).getValue() + tokens.get(i+1).getValue()));
+                i++;
+            } else if((i+1)<tokens.size() && (tokens.get(i).getValue().equals("+") && tokens.get(i+1).getValue().equals("+"))
+                    || (tokens.get(i).getValue().equals("-") && tokens.get(i+1).getValue().equals("-"))) {
+                retoken.add(new Token(Token.TokenType.VALUE, tokens.get(i).getValue() + tokens.get(i+1).getValue()));
+                i++;
+            }else if(tokens.get(i).getValue().equals("IF")&&tokens.get(i).getValue().equals("WHILE")){
+                while (tokens.get(i).getType()==Token.TokenType.VARIABLE || tokens.get(i).getType()==Token.TokenType.VALUE){
+                    expressionBuilder.append(tokens.get(i).getValue() + " ");
+                    i++;
+                }
+                retoken.add(new Token(Token.TokenType.VALUE, expressionBuilder.toString()));
+                expressionBuilder.setLength(0); // Reset the StringBuilder
+                retoken.add(tokens.get(i));
+            }else if(tokens.get(i).getValue().equals("(")){
+                String val = tokens.get(i).getValue();
+                while ( val.charAt(val.length()-1) != ')' && tokens.get(i).getType()!=Token.TokenType.END_LINE){
+                    expressionBuilder.append(tokens.get(i).getValue() + " ");
+                    i++;
+                }
+                retoken.add(new Token(Token.TokenType.VALUE, expressionBuilder.toString()));
+                expressionBuilder.setLength(0); // Reset the StringBuilder
+                retoken.add(tokens.get(i));
+            }else{
+                if (expressionBuilder.length() > 0) {
+                    retoken.add(new Token(Token.TokenType.VALUE, expressionBuilder.toString()));
+                    expressionBuilder.setLength(0); // Reset the StringBuilder
+                }
+                // Add the token directly to retoken
+                retoken.add(tokens.get(i));
+            }
+        }
+        LineConnector lineTokens = new LineConnector();
+        tokens = lineTokens.ConnectLines(retoken);
+    }
+    //endregion
+
     //region Miscelaneous
     private void UpdateVariableValue(String variableName, String value) {
         // Update the value of the variable if it exists
@@ -610,14 +696,22 @@ public class Parser {
     }
 
     //CalculatesIntOrFloat for a Node
-    private String CalculateIntOrFloat(String value, VariableDeclarationNode varNode) throws Exception {
-        if (value.matches(".*[()+*/%\\-].*") && varNode.getDataType().equals("FLOAT")) {
+    private String Calculate(String value, VariableDeclarationNode varNode) throws Exception {
+        if (varNode.getDataType().equals("FLOAT")) {
             JuxtapositionCalculator calculator = new JuxtapositionCalculator();
             value = Double.toString(calculator.calculate(ReplaceVariable(value)));
         }
         if (varNode.getDataType().equals("INT")) {
             JuxtapositionCalculator calculator = new JuxtapositionCalculator();
             value = Integer.toString((int) Math.round(calculator.calculate(ReplaceVariable(value))));
+        }
+        if (varNode.getDataType().equals("BOOL")) {
+            LogicCalculator calculator = new LogicCalculator();
+            if (calculator.evaluate(ReplaceVariable(value))) {
+                value = "\"TRUE\"";
+            } else{
+                value = "\"FALSE\"";
+            }
         }
         return  value;
     }
@@ -637,8 +731,6 @@ public class Parser {
         return modifiedExpression;
     }
     //endregion
-
-
 
 
     //unneeded extra to check if there are nodes

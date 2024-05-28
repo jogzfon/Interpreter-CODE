@@ -60,7 +60,7 @@ public class LogicCalculator {
     }
 
     public static void main(String[] args) throws CODEExceptions.NotExistingVariableName, CODEExceptions.JuxtapositionArithmeticException {
-        String expression = "(5==0) AND (5==5)";
+        String expression = "5*5";
 
         LogicCalculator calculator = new LogicCalculator();
         boolean result = calculator.evaluate(expression);
