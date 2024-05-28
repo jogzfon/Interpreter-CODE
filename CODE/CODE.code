@@ -1,5 +1,5 @@
 BEGIN CODE
-BOOL a= "TRUE", b
+CHAR a= 'a', b
 SCAN: a,b
 DISPLAY: a AND b
 END CODE

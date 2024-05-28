@@ -643,8 +643,8 @@ public class Parser {
         }
         currentTokenIndex++;
     }
-
     //endregion
+
     //region Validators
     public VariableDeclarationNode FindDeclaredNode(String variableName) {
         for (VariableDeclarationNode node : declarationNodes) {
