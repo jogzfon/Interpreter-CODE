@@ -1,5 +1,4 @@
 BEGIN CODE
-CHAR a= 'a', b
-SCAN: a,b
-DISPLAY: a AND b
+INT x = 4+3+2
+DISPLAY: [&]
 END CODE

@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 public class Lexer {
     public static List<Token> tokenize(String code) throws Exception {
         List<Token> tokenList = new ArrayList<>();
+
         boolean insideCodeBlock = false;
 
         // Regular expressions for tokenization
@@ -101,8 +102,19 @@ public class Lexer {
         //This will connect DISPLAY & SCAN with their :
         //Connects [ escape ]
         //Connects expressions
+
+        /*System.out.println("BEFORE LINE CONNECTOR");
+        for(Token token: tokenList){
+            System.out.println(token);
+        }
+        */
         LineConnector lineConnector = new LineConnector();
         tokenList = lineConnector.ConnectLines(tokenList);
+
+        /*System.out.println("AFTER LINE CONNECTOR");
+        for(Token token: tokenList){
+            System.out.println(token);
+        }*/
         return tokenList;
     }
 }

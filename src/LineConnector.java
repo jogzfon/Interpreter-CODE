@@ -65,7 +65,7 @@ public class LineConnector {
             if(isOpenEscape){
                 expressionBuilder.append(tokenList.get(i).getValue());
             }
-            // Check if the token's type is VARIABLE, OPERATOR, or VALUE and append them into a string
+            // Check if the token's type is OPERATOR or VALUE and append them into a string
             else if (tokenList.get(i).getType() == Token.TokenType.OPERATOR ||
                     tokenList.get(i).getType() == Token.TokenType.VALUE
                     || isNumeric(tokenList.get(i).getValue())) {
