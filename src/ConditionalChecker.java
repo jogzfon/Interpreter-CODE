@@ -25,7 +25,6 @@ public class ConditionalChecker {
                 if (tokens.get(index).getType() != Token.TokenType.IF_BEGIN){
                     if(tokens.get(pos).getValue().equals("IF")){
                         throw new CODEExceptions.IFException("BEGIN IF not found for the IF statement on line: " + checker.find(pos, tokens));
-
                     }else if (tokens.get(pos).getValue().equals("ELSE") && tokens.get(pos+1).getValue().equals("IF")){
                         throw new CODEExceptions.IFException("BEGIN IF not found for the ELSE IF statement on line: " + checker.find(pos, tokens));
 
@@ -34,7 +33,9 @@ public class ConditionalChecker {
                     }
                 }
             }
-
+            if(indexOfIF.size()==0 && tokens.get(index).getType() == Token.TokenType.IF_BEGIN){
+                throw new CODEExceptions.IFException("IF statement not found before line: " + checker.find(index, tokens));
+            }
             //Removes the last IF,ELSE IF, ELSE Position added if END IF is encountered
             if(tokens.get(index).getType() == Token.TokenType.IF_END && !indexOfIF.isEmpty()){
                 indexOfIF.remove(indexOfIF.size()-1);
@@ -74,6 +75,9 @@ public class ConditionalChecker {
                 if (tokens.get(index).getType() != Token.TokenType.WHILE_BEGIN){
                     throw new CODEExceptions.IFException("BEGIN WHILE not found for the WHILE statement on line: " + checker.find(pos, tokens));
                 }
+            }
+            if(indexOfWHILE.size()==0 && tokens.get(index).getType() == Token.TokenType.WHILE_BEGIN){
+                throw new CODEExceptions.IFException("WHILE statement not found before line: " + checker.find(index, tokens));
             }
 
             //Removes the last WHILE Position added if END WHILE is encountered

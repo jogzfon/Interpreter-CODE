@@ -18,16 +18,16 @@ public class Main extends Exception{
             //Tokenize the entire read lines
             List<Token> tokens = lexer.tokenize(input);
 
-            for(Token token: tokens){
+            /*for(Token token: tokens){
                 System.out.println(token);
-            }
+            }*/
 
             //Parser
             Parser parser = new Parser(tokens);
             parser.ParseTokens();
 
-            System.out.println("============= All the Declared Variables =================");
-            parser.GetAllDeclaredVariableNodes();
+            /*System.out.println("============= All the Declared Variables =================");
+            parser.GetAllDeclaredVariableNodes();*/
 
         } catch (IOException e) {
             System.err.println("Theres a problem in buffering the file!");

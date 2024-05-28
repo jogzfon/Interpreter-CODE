@@ -184,7 +184,7 @@ public class JuxtapositionCalculator {
 }
 
 
-class Cloco {
+/*class Cloco {
     public static void main(String[] args) throws CODEExceptions.JuxtapositionArithmeticException {
         String expression = "((23==23)+(42>=42))";
 
@@ -193,4 +193,4 @@ class Cloco {
 
         System.out.println("Result of the expression: " + result);
     }
-}
+}*/

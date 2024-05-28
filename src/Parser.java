@@ -1,6 +1,8 @@
 import org.w3c.dom.Node;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Parser {
     List<Token> tokens;
@@ -43,9 +45,6 @@ public class Parser {
             arithConnector();
             ParseStatement();
         }
-        for(Token token: tokens){
-            System.out.println(token);
-        }
         if(outputNull==true){
             System.out.println("No Error Found");
         }
@@ -66,6 +65,9 @@ public class Parser {
                 break;
             case VARIABLE:
                 ParseAssignmentStatement();
+                break;
+            case VALUE:
+                parseValueStatement();
                 break;
             case CONDITIONALS:
                 if(currentToken.getValue().equals("IF")){
@@ -96,11 +98,11 @@ public class Parser {
                     ifCondition.remove(ifCondition.size()-1);
                 }
 
-                while(currentTokenIndex<tokens.size() && tokens.get(currentTokenIndex).getType() == Token.TokenType.CONDITIONALS
+                while(currentTokenIndex<tokens.size()-1 && tokens.get(currentTokenIndex).getType() == Token.TokenType.CONDITIONALS
                         && (!tokens.get(currentTokenIndex).getValue().equals("IF") && !tokens.get(currentTokenIndex-1).getValue().equals("ELSE")) && !tokens.get(currentTokenIndex).getValue().equals("WHILE")){
                     while (tokens.get(currentTokenIndex).getType() != Token.TokenType.IF_END){
                         currentTokenIndex++;
-                        if(currentTokenIndex>tokens.size()){
+                        if(currentTokenIndex>tokens.size()-1){
                             throw new CODEExceptions.IFException("END IF nonexistent after line: " + lineCheck.find(currentTokenIndex, tokens));
                         }
                     }
@@ -141,6 +143,15 @@ public class Parser {
                 currentTokenIndex++;
                 break;
             case ESCAPE:
+                currentTokenIndex++;
+                break;
+            case STRING:
+                currentTokenIndex++;
+                break;
+            case WHILE_BEGIN:
+                currentTokenIndex++;
+                break;
+            case IF_BEGIN:
                 currentTokenIndex++;
                 break;
             default:
@@ -192,6 +203,9 @@ public class Parser {
                         currentTokenIndex++;
                         value = tokens.get(currentTokenIndex).getValue();
                         try{
+                            if(dataType.equals("INT") || dataType.equals("FLOAT") || dataType.equals("BOOL")){
+                                value = Calculate(value,dataType);
+                            }
                             FormatValidator(dataType, value);
                         }catch (Exception e){
                             System.err.println("Variable: "+ variableName+" has "+e.getMessage());
@@ -337,7 +351,7 @@ public class Parser {
                     value = Double.toString(Double.parseDouble(value)+0.0);
                 }
             }
-            value = Calculate(value, varNode);
+            value = Calculate(value, varNode.getDataType());
 
             FormatValidator(dataType, value);
             UpdateVariableValue(variableName,value);
@@ -430,14 +444,27 @@ public class Parser {
             outputNull = false;
         }
     }
-    private void ParseIfStatement() throws CODEExceptions.IFException, CODEExceptions.NotExistingVariableName, CODEExceptions.JuxtapositionArithmeticException {
+    private void ParseIfStatement() throws CODEExceptions.IFException, CODEExceptions.NotExistingVariableName, CODEExceptions.JuxtapositionArithmeticException, CODEExceptions.UninitializedVariable {
         currentTokenIndex++;
         if(tokens.get(currentTokenIndex).getType() == Token.TokenType.VALUE
                 && (tokens.get(currentTokenIndex).getValue().charAt(0) == '(' ||
                 tokens.get(currentTokenIndex).getValue().charAt(tokens.get(currentTokenIndex).getValue().length()-1) == ')')){
             LogicCalculator calc = new LogicCalculator();
+
             String val = tokens.get(currentTokenIndex).getValue();
-            boolean result = calc.evaluate(ReplaceVariable(val));
+            val = ReplaceVariable(val);
+            if(ReplaceVariable(val).contains("?")){
+                throw new CODEExceptions.UninitializedVariable("Uninitialized Variable found in condition: "+ val + " at line: " + lineCheck.find(currentTokenIndex, tokens));
+            }
+            //We Check if it has a remaining uninitialized variable
+            String regex = "\\b(?!AND\\b|OR\\b|NOT\\b)[a-z]+";
+
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(val);
+            if(matcher.find()){
+                throw new CODEExceptions.NotExistingVariableName("Undeclared Variable found in: "+val+" on line: "+ lineCheck.find(currentTokenIndex, tokens));
+            }
+            boolean result = calc.evaluate(val);
             if(result){
                 currentTokenIndex+=2;
                 ifCondition.add("true");
@@ -482,11 +509,22 @@ public class Parser {
             LogicCalculator calc = new LogicCalculator();
             String val = tokens.get(currentTokenIndex).getValue();
 
+            val = ReplaceVariable(val);
+
             if(ReplaceVariable(val).contains("?")){
                 throw new CODEExceptions.UninitializedVariable("Uninitialized Variable found in condition: "+ val + " at line: " + lineCheck.find(currentTokenIndex, tokens));
             }
 
-            boolean result = calc.evaluate(ReplaceVariable(val));
+            //We Check if it has a remaining uninitialized variable
+            String regex = "\\b(?!AND\\b|OR\\b|NOT\\b)[a-z]+";
+
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(val);
+            if(matcher.find()){
+                throw new CODEExceptions.NotExistingVariableName("Undeclared Variable found in: "+val+" on line: "+ lineCheck.find(currentTokenIndex, tokens));
+            }
+
+            boolean result = calc.evaluate(val);
             if(result==true){
                 if(tokens.get(currentTokenIndex+2).getType() == Token.TokenType.WHILE_BEGIN){
                     currentTokenIndex+=2;
@@ -537,7 +575,7 @@ public class Parser {
                 if(variableNode.getVariableName().equals(variable)){
                     VariableDeclarationNode vnode = FindDeclaredNode(variable);
                     if (vnode.getDataType().equals("INT") || vnode.getDataType().equals("FLOAT") || vnode.getDataType().equals("BOOL")){
-                        value = Calculate(value, vnode);
+                        value = Calculate(value, vnode.getDataType());
                     }
                     FormatValidator(vnode.getDataType(), value);
 
@@ -547,6 +585,26 @@ public class Parser {
         }
         variables.clear();
         return variables;
+    }
+    //CalculatesIntOrFloatOrBOOL for a Node
+    private String Calculate(String value, String dataType) throws Exception {
+        if (dataType.equals("FLOAT")) {
+            JuxtapositionCalculator calculator = new JuxtapositionCalculator();
+            value = Double.toString(calculator.calculate(ReplaceVariable(value)));
+        }
+        if (dataType.equals("INT")) {
+            JuxtapositionCalculator calculator = new JuxtapositionCalculator();
+            value = Integer.toString((int) Math.round(calculator.calculate(ReplaceVariable(value))));
+        }
+        if (dataType.equals("BOOL")) {
+            LogicCalculator calculator = new LogicCalculator();
+            if (calculator.evaluate(ReplaceVariable(value))) {
+                value = "\"TRUE\"";
+            } else{
+                value = "\"FALSE\"";
+            }
+        }
+        return  value;
     }
     //endregion
 
@@ -686,6 +744,7 @@ public class Parser {
     //endregion
 
     //region Miscelaneous
+    //UpdatesVariableValues
     private void UpdateVariableValue(String variableName, String value) {
         // Update the value of the variable if it exists
         for (VariableDeclarationNode variable : declarationNodes) {
@@ -695,31 +754,10 @@ public class Parser {
         }
     }
 
-    //CalculatesIntOrFloat for a Node
-    private String Calculate(String value, VariableDeclarationNode varNode) throws Exception {
-        if (varNode.getDataType().equals("FLOAT")) {
-            JuxtapositionCalculator calculator = new JuxtapositionCalculator();
-            value = Double.toString(calculator.calculate(ReplaceVariable(value)));
-        }
-        if (varNode.getDataType().equals("INT")) {
-            JuxtapositionCalculator calculator = new JuxtapositionCalculator();
-            value = Integer.toString((int) Math.round(calculator.calculate(ReplaceVariable(value))));
-        }
-        if (varNode.getDataType().equals("BOOL")) {
-            LogicCalculator calculator = new LogicCalculator();
-            if (calculator.evaluate(ReplaceVariable(value))) {
-                value = "\"TRUE\"";
-            } else{
-                value = "\"FALSE\"";
-            }
-        }
-        return  value;
-    }
-
     //Replaces Variables inside the expression with their values
     private String ReplaceVariable(String expression) {
         String modifiedExpression = expression;
-        VariableDeclarationNode varNode = null;
+        VariableDeclarationNode varNode;
         for (String variableName: declaredVariableNames){
             // Use regular expression to find and replace the variable
             String regex = "\\b" + variableName + "\\b"; // Match whole word
@@ -732,11 +770,49 @@ public class Parser {
     }
     //endregion
 
+    private void parseValueStatement() throws Exception {
+        if((tokens.get(currentTokenIndex).getValue().contains("++")|| tokens.get(currentTokenIndex).getValue().contains("--")
+                || tokens.get(currentTokenIndex).getValue().contains("-=")
+                || tokens.get(currentTokenIndex).getValue().contains("+=")
+                || tokens.get(currentTokenIndex).getValue().contains("/=")
+                || tokens.get(currentTokenIndex).getValue().contains("%="))){
 
+            //ReplaceValue part where we find the matching variableName
+            String varName = "";
+            String modifiedExpression = tokens.get(currentTokenIndex).getValue();
+            VariableDeclarationNode varNode;
+            for (String variableName: declaredVariableNames){
+                // Use regular expression to find and replace the variable
+                String regex = "\\b" + variableName + "\\b"; // Match whole word
+                varNode = FindDeclaredNode(variableName);
+
+                // Replace the variable with the replacement value
+                if(!modifiedExpression.equals(modifiedExpression.replaceAll(regex, varNode.getValue()))){
+                    varName = varNode.getVariableName();
+                    break;
+                }
+            }
+
+            VariableDeclarationNode vnode = FindDeclaredNode(varName);
+            String value = tokens.get(currentTokenIndex).getValue();
+            if(vnode!=null){
+                value = Calculate(value, vnode.getDataType());
+                FormatValidator(vnode.getDataType(),value);
+                UpdateVariableValue(vnode.getVariableName(), value);
+            }else{
+                throw new CODEExceptions.NotExistingVariableName("Variable: "+varName+ ": does not exist at line: " + lineCheck.find(currentTokenIndex, tokens));
+            }
+        }
+        currentTokenIndex++;
+    }
+
+
+    //region Debugging
     //unneeded extra to check if there are nodes
     public void GetAllDeclaredVariableNodes(){
         for (VariableDeclarationNode node: declarationNodes){
             System.out.println(node);
         }
     }
+    //endregion
 }
