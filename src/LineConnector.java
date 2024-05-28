@@ -83,8 +83,15 @@ public class LineConnector {
                     expressionBuilder.setLength(0); // Reset the StringBuilder
                 }
 
+                //If "TRUE" or "FALSE" retoken it so that its token type from STRING is made into VALUE
+                if(tokenList.get(i).getValue().equals("\"TRUE\"") || tokenList.get(i).getValue().equals("\"FALSE\"")){
+                    retoken.add(new Token(Token.TokenType.VALUE, tokenList.get(i).getValue()));
+                }
                 // Add the token directly to retoken
-                retoken.add(tokenList.get(i));
+                else{
+                    retoken.add(tokenList.get(i));
+                }
+
             }
         }
         //If [ exist and the there is no ] in the list of tokens and exception will be thrown

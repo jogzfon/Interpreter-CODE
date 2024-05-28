@@ -67,7 +67,7 @@ public class Parser {
                 ParseAssignmentStatement();
                 break;
             case VALUE:
-                parseValueStatement();
+                ParseValueStatement();
                 break;
             case CONDITIONALS:
                 if(currentToken.getValue().equals("IF")){
@@ -293,7 +293,7 @@ public class Parser {
                 }
             }
         }
-    }
+    } //Supporting function for this is DistributValues
     private void ParseScanInput() throws Exception {
         Scanner scan = new Scanner(System.in);
         currentTokenIndex++;
@@ -606,8 +606,45 @@ public class Parser {
         }
         return  value;
     }
-    //endregion
 
+    //Parses Value with ++ += -= %= --
+    private void ParseValueStatement() throws Exception {
+        if((tokens.get(currentTokenIndex).getValue().contains("++")|| tokens.get(currentTokenIndex).getValue().contains("--")
+                || tokens.get(currentTokenIndex).getValue().contains("-=")
+                || tokens.get(currentTokenIndex).getValue().contains("+=")
+                || tokens.get(currentTokenIndex).getValue().contains("/=")
+                || tokens.get(currentTokenIndex).getValue().contains("%="))){
+
+            //ReplaceValue part where we find the matching variableName
+            String varName = "";
+            String modifiedExpression = tokens.get(currentTokenIndex).getValue();
+            VariableDeclarationNode varNode;
+            for (String variableName: declaredVariableNames){
+                // Use regular expression to find and replace the variable
+                String regex = "\\b" + variableName + "\\b"; // Match whole word
+                varNode = FindDeclaredNode(variableName);
+
+                // Replace the variable with the replacement value
+                if(!modifiedExpression.equals(modifiedExpression.replaceAll(regex, varNode.getValue()))){
+                    varName = varNode.getVariableName();
+                    break;
+                }
+            }
+
+            VariableDeclarationNode vnode = FindDeclaredNode(varName);
+            String value = tokens.get(currentTokenIndex).getValue();
+            if(vnode!=null){
+                value = Calculate(value, vnode.getDataType());
+                FormatValidator(vnode.getDataType(),value);
+                UpdateVariableValue(vnode.getVariableName(), value);
+            }else{
+                throw new CODEExceptions.NotExistingVariableName("Variable: "+varName+ ": does not exist at line: " + lineCheck.find(currentTokenIndex, tokens));
+            }
+        }
+        currentTokenIndex++;
+    }
+
+    //endregion
     //region Validators
     public VariableDeclarationNode FindDeclaredNode(String variableName) {
         for (VariableDeclarationNode node : declarationNodes) {
@@ -769,43 +806,6 @@ public class Parser {
         return modifiedExpression;
     }
     //endregion
-
-    private void parseValueStatement() throws Exception {
-        if((tokens.get(currentTokenIndex).getValue().contains("++")|| tokens.get(currentTokenIndex).getValue().contains("--")
-                || tokens.get(currentTokenIndex).getValue().contains("-=")
-                || tokens.get(currentTokenIndex).getValue().contains("+=")
-                || tokens.get(currentTokenIndex).getValue().contains("/=")
-                || tokens.get(currentTokenIndex).getValue().contains("%="))){
-
-            //ReplaceValue part where we find the matching variableName
-            String varName = "";
-            String modifiedExpression = tokens.get(currentTokenIndex).getValue();
-            VariableDeclarationNode varNode;
-            for (String variableName: declaredVariableNames){
-                // Use regular expression to find and replace the variable
-                String regex = "\\b" + variableName + "\\b"; // Match whole word
-                varNode = FindDeclaredNode(variableName);
-
-                // Replace the variable with the replacement value
-                if(!modifiedExpression.equals(modifiedExpression.replaceAll(regex, varNode.getValue()))){
-                    varName = varNode.getVariableName();
-                    break;
-                }
-            }
-
-            VariableDeclarationNode vnode = FindDeclaredNode(varName);
-            String value = tokens.get(currentTokenIndex).getValue();
-            if(vnode!=null){
-                value = Calculate(value, vnode.getDataType());
-                FormatValidator(vnode.getDataType(),value);
-                UpdateVariableValue(vnode.getVariableName(), value);
-            }else{
-                throw new CODEExceptions.NotExistingVariableName("Variable: "+varName+ ": does not exist at line: " + lineCheck.find(currentTokenIndex, tokens));
-            }
-        }
-        currentTokenIndex++;
-    }
-
 
     //region Debugging
     //unneeded extra to check if there are nodes
