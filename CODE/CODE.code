@@ -1,0 +1,4 @@
+BEGIN CODE
+INT dy =4, x=  23
+DISPLAY: dy + x
+END CODE
