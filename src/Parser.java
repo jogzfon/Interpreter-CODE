@@ -482,12 +482,15 @@ public class Parser {
                 ifCondition.add("false");
                 int ifCount = ifCondition.size();
                 if(ifCount > 0 && ifCondition.get(ifCount-1).equals("false")){
-                    while (!ifCondition.isEmpty() &&ifCondition.size()>ifCount-1){
+                    while (!ifCondition.isEmpty() && ifCondition.size()>ifCount-1){
                         if(tokens.get(currentTokenIndex).getValue().equals("IF")){
                             ifCondition.add("false");
                         }
                         if(tokens.get(currentTokenIndex).getType() == Token.TokenType.IF_END){
                             ifCondition.remove(ifCondition.size()-1);
+                        }
+                        if(ifCondition.isEmpty()){
+                            break;
                         }
                         currentTokenIndex++;
                     }
@@ -551,6 +554,9 @@ public class Parser {
                         if(tokens.get(currentTokenIndex).getType() == Token.TokenType.WHILE_END){
                             whileCondition.remove(whileCondition.size()-1);
                         }
+                        if(whileCondition.isEmpty()){
+                            break;
+                        }
                         currentTokenIndex++;
                     }
                 }else {
@@ -560,7 +566,6 @@ public class Parser {
 
                     whileVariables.clear();
                 }
-                //System.out.println(tokens.get(currentTokenIndex-1).getValue());
             }
         }else{
             String line = tokens.get(currentTokenIndex).getValue();
@@ -568,7 +573,6 @@ public class Parser {
                 throw new CODEExceptions.WHILEException("WHILE condition: "+ tokens.get(currentTokenIndex).getValue() + " must be inside a parenthesis at line: " + lineCheck.find(currentTokenIndex, tokens));
             }
             else if(line=="END_LINE"){
-                System.out.println(tokens.get(currentTokenIndex).getValue());
                 throw new CODEExceptions.WHILEException("WHILE must have a condition at line: " + lineCheck.find(currentTokenIndex, tokens));
             }else{
                 throw new CODEExceptions.WHILEException("Not a valid condition for WHILE: "+ tokens.get(currentTokenIndex).getValue()+" at line: " + lineCheck.find(currentTokenIndex, tokens));
