@@ -44,9 +44,9 @@ public class JuxtapositionCalculator {
     // Method to parse a comparison expression
     private double parseComparison() throws CODEExceptions.JuxtapositionArithmeticException {
         double leftOperand = parseTerm();
-
         while (index < expression.length()) {
             char operator = expression.charAt(index);
+
             if (operator == '>' || operator == '<' || operator == '=' || operator == '!'
                     || operator == '+' || operator == '-' || operator == '/'|| operator == '%' || operator == '*') {
                 index++;
@@ -75,7 +75,6 @@ public class JuxtapositionCalculator {
                     }
                 } else if(nextChar == '-'){
                     // Handle decrement operation
-                    index++;
                     if (operator == '-') {
                         leftOperand--;
                     } else {
@@ -83,7 +82,6 @@ public class JuxtapositionCalculator {
                     }
                 } else if(nextChar == '+'){
                     // Handle increment operation
-                    index++;
                     if (operator == '+') {
                         leftOperand = leftOperand + 1;
                     } else {
@@ -125,7 +123,36 @@ public class JuxtapositionCalculator {
 
         while (index < expression.length()) {
             char operator = expression.charAt(index);
-            if (operator == 'x' || operator == '*') {
+            if (operator == '+') {
+                index++;
+                char nextChar = (index < expression.length()) ? expression.charAt(index) : 0;
+
+                double divisor =0;
+                if(nextChar=='+'){
+                    divisor = 1;
+                }else if(nextChar=='='){
+                    index++;
+                    divisor = parseFactor();
+                }
+
+                result += divisor;
+            }
+            else if (operator == '-') {
+                index++;
+
+                char nextChar = (index < expression.length()) ? expression.charAt(index) : 0;
+
+                double divisor =0;
+                if(nextChar=='-'){
+                    divisor = 1;
+                }else if(nextChar=='='){
+                    index++;
+                    divisor = parseFactor();
+                }
+
+                result -= divisor;
+            }
+            else if (operator == 'x' || operator == '*') {
                 index++;
 
                 char nextChar = (index < expression.length()) ? expression.charAt(index) : 0;
@@ -171,7 +198,7 @@ public class JuxtapositionCalculator {
     }
 
     // Method to parse a factor
-    private double parseFactor() throws CODEExceptions.JuxtapositionArithmeticException, CODEExceptions.JuxtapositionArithmeticException {
+    private double parseFactor() throws CODEExceptions.JuxtapositionArithmeticException {
         if (index >= expression.length()) {
             throw new CODEExceptions.JuxtapositionArithmeticException("Invalid Expression: "+ expression);
         }
