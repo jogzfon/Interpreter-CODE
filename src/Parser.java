@@ -107,36 +107,42 @@ public class Parser {
                     currentTokenIndex++;
                 }
                 ifVariables.clear();
+                break;
             case WHILE_END:
-                whileStarted = false;
+                try{
+                    whileStarted = false;
 
-                if(whileComebackTokenIndex.size()>1&&comebackConditionStack.size()>1){
-                    LogicCalculator calc = new LogicCalculator();
-                    String val = comebackConditionStack.peek();
-                    boolean result = calc.evaluate(ReplaceVariable(val));
+                    if(whileComebackTokenIndex.size()>1&&comebackConditionStack.size()>1){
+                        LogicCalculator calc = new LogicCalculator();
+                        String val = comebackConditionStack.peek();
+                        boolean result = calc.evaluate(ReplaceVariable(val));
 
-                    if(result==false){
-                        currentTokenIndex++;
-                        whileComebackTokenIndex.pop();
-                        comebackConditionStack.pop();
-                    }else{
-                        tokens.get(whileComebackTokenIndex.peek()).setValue(comebackConditionStack.peek());
-                        currentTokenIndex = whileComebackTokenIndex.peek();
+                        if(result==false){
+                            currentTokenIndex++;
+                            whileComebackTokenIndex.pop();
+                            comebackConditionStack.pop();
+                        }else{
+                            tokens.get(whileComebackTokenIndex.peek()).setValue(comebackConditionStack.peek());
+                            currentTokenIndex = whileComebackTokenIndex.peek();
+                        }
                     }
-                }
-                else{
-                    LogicCalculator calc = new LogicCalculator();
-                    String val = comebackConditionStack.peek();
-                    boolean result = calc.evaluate(ReplaceVariable(val));
-                    if(result){
-                        tokens.get(whileComebackTokenIndex.peek()).setValue(comebackConditionStack.peek());
-                        currentTokenIndex = whileComebackTokenIndex.peek();
-                    }else{
-                        whileComebackTokenIndex.pop();
-                        comebackConditionStack.pop();
-                        currentTokenIndex++;
+                    else{
+                        LogicCalculator calc = new LogicCalculator();
+                        String val = comebackConditionStack.peek();
+                        boolean result = calc.evaluate(ReplaceVariable(val));
+                        if(result){
+                            tokens.get(whileComebackTokenIndex.peek()).setValue(comebackConditionStack.peek());
+                            currentTokenIndex = whileComebackTokenIndex.peek();
+                        }else{
+                            whileComebackTokenIndex.pop();
+                            comebackConditionStack.pop();
+                            currentTokenIndex++;
+                        }
                     }
+                }catch (Exception e){
+                    System.err.println("WHILE END Error: "+ e.getMessage()+ " at line: "+lineCheck.find(currentTokenIndex, tokens));
                 }
+                break;
             case END_LINE:
                 currentTokenIndex++;
                 break;
@@ -469,7 +475,6 @@ public class Parser {
             }
             boolean result = calc.evaluate(val);
             if(result){
-                System.out.println(tokens.get(currentTokenIndex));
                 currentTokenIndex+=2;
                 ifCondition.add("true");
                 ifStarted = true;

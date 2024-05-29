@@ -18,6 +18,10 @@ public class Main extends Exception{
             //Tokenize the entire read lines
             List<Token> tokens = lexer.tokenize(input);
 
+            /*for (Token token: tokens){
+                System.out.println(token);
+            }*/
+
             //Parser
             Parser parser = new Parser(tokens);
             parser.ParseTokens();
