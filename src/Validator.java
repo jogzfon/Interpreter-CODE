@@ -34,7 +34,6 @@ public class Validator extends CODEExceptions{
         if(!ended && started){
             throw new ENDCODEException("END CODE does not exist!");
         }
-        return;
     }
     //Checks if Variable name follows the syntax
     public static boolean isValidVariableName(String name) throws CODEExceptions.InvalidVariableName {

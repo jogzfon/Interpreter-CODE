@@ -42,13 +42,13 @@ public class JuxtapositionCalculator {
     }
 
     // Method to parse a comparison expression
-    private double parseComparison() throws CODEExceptions.JuxtapositionArithmeticException, CODEExceptions.JuxtapositionArithmeticException {
+    private double parseComparison() throws CODEExceptions.JuxtapositionArithmeticException {
         double leftOperand = parseTerm();
 
         while (index < expression.length()) {
             char operator = expression.charAt(index);
             if (operator == '>' || operator == '<' || operator == '=' || operator == '!'
-                    || operator == '+' || operator == '-' || operator == '/'|| operator == '%') {
+                    || operator == '+' || operator == '-' || operator == '/'|| operator == '%' || operator == '*') {
                 index++;
                 char nextChar = (index < expression.length()) ? expression.charAt(index) : 0;
                 if (nextChar == '=') {
@@ -62,14 +62,6 @@ public class JuxtapositionCalculator {
                             return leftOperand == parseTerm() ? 1 : 0;
                         case '!':
                             return leftOperand != parseTerm() ? 1 : 0;
-                        case '+':
-                            return leftOperand += parseTerm();
-                        case '-':
-                            return leftOperand -= parseTerm();
-                        case '/':
-                            return leftOperand /= parseTerm();
-                        case '%':
-                            return leftOperand %= parseTerm();
                         default:
                             throw new CODEExceptions.JuxtapositionArithmeticException("Invalid operator: " + operator + " in: "+ expression);
                     }
@@ -97,7 +89,7 @@ public class JuxtapositionCalculator {
                     } else {
                         throw new CODEExceptions.JuxtapositionArithmeticException("Invalid operator: " + operator + " in: "+ expression);
                     }
-                } else {
+                }else {
                     switch (operator) {
                         case '>':
                             return leftOperand > parseTerm() ? 1 : 0;
@@ -107,6 +99,14 @@ public class JuxtapositionCalculator {
                             return leftOperand != parseTerm() ? 1 : 0;
                         case '+':
                             return leftOperand + parseTerm();
+                        case '-':
+                            return leftOperand - parseTerm();
+                        case '/':
+                            return leftOperand / parseTerm();
+                        case '%':
+                            return leftOperand % parseTerm();
+                        case '*':
+                            return leftOperand * parseTerm();
                         default:
                             throw new CODEExceptions.JuxtapositionArithmeticException("Invalid operator: " + operator + " in: "+ expression);
                     }
@@ -120,24 +120,44 @@ public class JuxtapositionCalculator {
     }
 
     // Method to parse a term
-    private double parseTerm() throws CODEExceptions.JuxtapositionArithmeticException, CODEExceptions.JuxtapositionArithmeticException {
+    private double parseTerm() throws  CODEExceptions.JuxtapositionArithmeticException {
         double result = parseFactor();
 
         while (index < expression.length()) {
             char operator = expression.charAt(index);
             if (operator == 'x' || operator == '*') {
                 index++;
-                result *= parseFactor();
+
+                char nextChar = (index < expression.length()) ? expression.charAt(index) : 0;
+
+                double divisor = parseFactor();
+                if(nextChar=='='){
+                    index++;
+                    divisor = parseFactor();
+                }
+                result *= divisor;
             } else if (operator == '/') {
                 index++;
+                char nextChar = (index < expression.length()) ? expression.charAt(index) : 0;
+
                 double divisor = parseFactor();
+                if(nextChar=='='){
+                    index++;
+                    divisor = parseFactor();
+                }
                 if (divisor == 0) {
                     throw new CODEExceptions.JuxtapositionArithmeticException("Division by zero: " + expression);
                 }
                 result /= divisor;
             } else if (operator == '%') {
                 index++;
+                char nextChar = (index < expression.length()) ? expression.charAt(index) : 0;
+
                 double divisor = parseFactor();
+                if(nextChar=='='){
+                    index++;
+                    divisor = parseFactor();
+                }
                 if (divisor == 0) {
                     throw new CODEExceptions.JuxtapositionArithmeticException("Modulo by zero: " + expression);
                 }

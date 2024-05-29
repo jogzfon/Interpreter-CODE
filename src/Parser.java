@@ -31,8 +31,6 @@ public class Parser {
 
     private boolean outputNull = true;
 
-
-
     public Parser(List<Token> tokens) {
         this.tokens = tokens;
         lineCheck = new LineNumberChecker();
@@ -152,6 +150,9 @@ public class Parser {
                 currentTokenIndex++;
                 break;
             case IF_BEGIN:
+                currentTokenIndex++;
+                break;
+            case END_CODE:
                 currentTokenIndex++;
                 break;
             default:
@@ -453,6 +454,7 @@ public class Parser {
 
             String val = tokens.get(currentTokenIndex).getValue();
             val = ReplaceVariable(val);
+
             if(ReplaceVariable(val).contains("?")){
                 throw new CODEExceptions.UninitializedVariable("Uninitialized Variable found in condition: "+ val + " at line: " + lineCheck.find(currentTokenIndex, tokens));
             }
@@ -461,11 +463,13 @@ public class Parser {
 
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(val);
+
             if(matcher.find()){
                 throw new CODEExceptions.NotExistingVariableName("Undeclared Variable found in: "+val+" on line: "+ lineCheck.find(currentTokenIndex, tokens));
             }
             boolean result = calc.evaluate(val);
             if(result){
+                System.out.println(tokens.get(currentTokenIndex));
                 currentTokenIndex+=2;
                 ifCondition.add("true");
                 ifStarted = true;
@@ -613,7 +617,8 @@ public class Parser {
                 || tokens.get(currentTokenIndex).getValue().contains("-=")
                 || tokens.get(currentTokenIndex).getValue().contains("+=")
                 || tokens.get(currentTokenIndex).getValue().contains("/=")
-                || tokens.get(currentTokenIndex).getValue().contains("%="))){
+                || tokens.get(currentTokenIndex).getValue().contains("%=")
+                || tokens.get(currentTokenIndex).getValue().contains("*="))){
 
             //ReplaceValue part where we find the matching variableName
             String varName = "";
