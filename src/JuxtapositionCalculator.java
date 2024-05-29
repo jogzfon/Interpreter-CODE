@@ -133,7 +133,7 @@ public class JuxtapositionCalculator {
                 }else if(nextChar=='='){
                     index++;
                     divisor = parseFactor();
-                }else{
+                }else if(index<expression.length()){
                     divisor = parseFactor();
                 }
 
@@ -150,7 +150,7 @@ public class JuxtapositionCalculator {
                 }else if(nextChar=='='){
                     index++;
                     divisor = parseFactor();
-                }else{
+                }else if(index<expression.length()){
                     divisor = parseFactor();
                 }
 
@@ -237,7 +237,7 @@ public class JuxtapositionCalculator {
 
 /*class Cloco {
     public static void main(String[] args) throws CODEExceptions.JuxtapositionArithmeticException {
-        String expression = "((23==23)+(42>=42))";
+        String expression = "((5>0)+(5<10))";
 
         JuxtapositionCalculator calculator = new JuxtapositionCalculator();
         double result = calculator.calculate(expression);

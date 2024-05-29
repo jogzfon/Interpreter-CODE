@@ -1,9 +1,9 @@
 BEGIN CODE
-INT a
+INT a=0,b = 0
 SCAN: a
-WHILE (a>0)
+WHILE (a>0 AND a<10)
 BEGIN WHILE
-    DISPLAY: a+10
-    a = a+1
+DISPLAY: a - 1
+    a+= 1
 END WHILE
 END CODE

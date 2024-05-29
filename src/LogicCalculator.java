@@ -16,6 +16,8 @@ public class LogicCalculator {
         // Evaluate each part separately
         for (String part : parts) {
             part = part.trim(); // Remove leading and trailing spaces
+            part = part.replaceAll("\\(|\\)", "");
+
             boolean partResult = evaluatePart(part);
 
             // Combine results based on AND or OR operators
