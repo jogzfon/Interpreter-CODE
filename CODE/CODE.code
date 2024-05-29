@@ -1,8 +1,8 @@
 BEGIN CODE
-INT x=10
-IF(x>0)
+INT a
+SCAN: a
+IF (a<0)
 BEGIN IF
-x--
-DISPLAY: x
+    DISPLAY: a+10
 END IF
 END CODE

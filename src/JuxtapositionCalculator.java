@@ -133,6 +133,8 @@ public class JuxtapositionCalculator {
                 }else if(nextChar=='='){
                     index++;
                     divisor = parseFactor();
+                }else{
+                    divisor = parseFactor();
                 }
 
                 result += divisor;
@@ -147,6 +149,8 @@ public class JuxtapositionCalculator {
                     divisor = 1;
                 }else if(nextChar=='='){
                     index++;
+                    divisor = parseFactor();
+                }else{
                     divisor = parseFactor();
                 }
 
